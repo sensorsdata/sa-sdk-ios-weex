@@ -3,11 +3,33 @@
 //  SensorsAnalyticsSDK
 //
 //  Created by 向作为 on 2018/1/24.
-//  Copyright © 2018年 SensorsData. All rights reserved.
+// Copyright © 2018-2021 Sensors Data Co., Ltd. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 //
 
+#if ! __has_feature(objc_arc)
+#error This file must be compiled with ARC. Either turn on ARC for the project or use -fobjc-arc flag on this file.
+#endif
+
 #import "WeexSensorsDataAnalyticsModule.h"
+
+#if __has_include(<SensorsAnalyticsSDK/SensorsAnalyticsSDK.h>)
+#import <SensorsAnalyticsSDK/SensorsAnalyticsSDK.h>
+#else
 #import "SensorsAnalyticsSDK.h"
+#endif
+
 @implementation WeexSensorsDataAnalyticsModule
 
 WX_EXPORT_METHOD(@selector(track:withProperties:))
@@ -17,16 +39,13 @@ WX_EXPORT_METHOD(@selector(clearTrackTimer))
 WX_EXPORT_METHOD(@selector(trackInstallation:withProperties:))
 WX_EXPORT_METHOD(@selector(login:))
 WX_EXPORT_METHOD(@selector(logout))
-WX_EXPORT_METHOD(@selector(trackViewScreen:))
+WX_EXPORT_METHOD(@selector(trackViewScreen:withProperties:))
 WX_EXPORT_METHOD(@selector(set:))
 WX_EXPORT_METHOD(@selector(setOnce:))
 WX_EXPORT_METHOD(@selector(unset:))
-WX_EXPORT_METHOD(@selector(increment:))
+WX_EXPORT_METHOD(@selector(increment:by:))
 WX_EXPORT_METHOD(@selector(append:by:))
 WX_EXPORT_METHOD(@selector(deleteUser))
-
-
-
 
 /**
  * 导出 track 方法给 weex 使用.
@@ -37,20 +56,14 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  * weex 中使用示例：
  *            weexSensorsAnalyticsModule.track("weex_AddToFav",{"ProductID":123456,"UserLevel":"VIP"})
  */
-
--(void)track:(NSString *)event withProperties:(NSDictionary *)propertyDict{
+- (void)track:(NSString *)event withProperties:(NSDictionary *)propertyDict {
     @try {
-        NSMutableDictionary *mutDict = [NSMutableDictionary dictionaryWithDictionary:propertyDict];
-        [propertyDict enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-            if ([obj isKindOfClass:NSArray.class]) {
-                [mutDict setObject:[NSSet setWithArray:obj] forKey:key];
-            }
-        }];
-        [[SensorsAnalyticsSDK sharedInstance] track:event withProperties:mutDict];
+        [[SensorsAnalyticsSDK sharedInstance] track:event withProperties:propertyDict];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
 }
+
 /**
  * 导出 trackTimer 方法给 weex 使用.
  *
@@ -61,14 +74,15 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  *            weexSensorsAnalyticsModule.trackTimerBegin("viewTimer")
  *            weexSensorsAnalyticsModule.trackTimerEnd("viewTimer")
  */
--(void)trackTimerBegin:(NSString *)event{
+- (void)trackTimerBegin:(NSString *)event {
     @try {
-        [[SensorsAnalyticsSDK sharedInstance] trackTimerBegin:event];
+        [[SensorsAnalyticsSDK sharedInstance] trackTimerStart:event];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
 }
--(void)trackTimerEnd:(NSString *)event{
+
+- (void)trackTimerEnd:(NSString *)event {
     @try {
         [[SensorsAnalyticsSDK sharedInstance] trackTimerEnd:event];
     } @catch (NSException *exception) {
@@ -84,13 +98,14 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  * weex 中使用示例：
  *                 weexSensorsAnalyticsModule.clearTrackTimer()
  */
--(void)clearTrackTimer{
+- (void)clearTrackTimer {
     @try {
         [[SensorsAnalyticsSDK sharedInstance] clearTrackTimer];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
 }
+
 /**
  * 导出 trackInstallation 方法给 weex 使用.
  *
@@ -110,13 +125,14 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  *                               + ":" + this.minute + ":" + this.second;
  *            weexSensorsAnalyticsModule.trackInstallation("AppInstall",{"FirstUseTime":currentTime})
  */
--(void)trackInstallation:(NSString *)event withProperties:(NSDictionary *)propertyDict{
+- (void)trackInstallation:(NSString *)event withProperties:(NSDictionary *)propertyDict {
     @try {
         [[SensorsAnalyticsSDK sharedInstance] trackInstallation:event withProperties:propertyDict];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
 }
+
 /**
  * 导出 login 方法给 weex 使用.
  *
@@ -125,20 +141,21 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  * weex 中使用示例：
  *            weexSensorsAnalyticsModule.login("developer@sensorsdata.cn")
  */
--(void)login:(NSString *)loginId{
+- (void)login:(NSString *)loginId {
     @try {
         [[SensorsAnalyticsSDK sharedInstance] login:loginId];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
 }
+
 /**
  * 导出 logout 方法给 weex 使用.
  *
  * weex 中使用示例：
  *            weexSensorsAnalyticsModule.logout()
  */
--(void)logout{
+- (void)logout {
     @try {
         [[SensorsAnalyticsSDK sharedInstance] logout];
     } @catch (NSException *exception) {
@@ -159,13 +176,15 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  * weex 中使用示例：
  *            weexSensorsAnalyticsModule.trackViewScreen(null,{"$title":"weex主页","$screen_name":"cn.sensorsdata.demo.weexHome"})
  */
--(void)trackViewScreen:(NSString *)url withProperties:(NSDictionary *)properties{
+- (void)trackViewScreen:(NSString *)url withProperties:(NSDictionary *)properties {
     @try {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
         [[SensorsAnalyticsSDK sharedInstance] trackViewScreen:url withProperties:properties];
+#pragma clang diagnostic pop
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
-
 }
 /**
  * 导出 set 方法给 weex 使用.
@@ -175,9 +194,9 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  * weex 中使用示例：（保存用户的属性 "sex":"男"）
  *            weexSensorsAnalyticsModule.set({"sex":"男"})
  */
--(void)set:(NSDictionary *)profileDict{
+- (void)set:(NSDictionary *)profileDict {
     @try {
-        [[[SensorsAnalyticsSDK sharedInstance] people] set:profileDict];
+        [[SensorsAnalyticsSDK sharedInstance] set:profileDict];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
@@ -193,13 +212,14 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  *  weex 中使用示例：（保存用户的属性 "sex":"男"）
  *            weexSensorsAnalyticsModule.setOnce({"sex":"男"})
  */
--(void)setOnce:(NSDictionary *)profileDict{
+- (void)setOnce:(NSDictionary *)profileDict {
     @try {
-        [[[SensorsAnalyticsSDK sharedInstance] people] setOnce:profileDict];
+        [[SensorsAnalyticsSDK sharedInstance] setOnce:profileDict];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
 }
+
 /**
  * 导出 unset 方法给 weex 使用.
  * <p>
@@ -210,13 +230,14 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  *                 weex 中使用示例：
  *                 weexSensorsAnalyticsModule.unset("sex")
  */
--(void)unset:(NSString *) profile{
+- (void)unset:(NSString *)profile {
     @try {
-        [[[SensorsAnalyticsSDK sharedInstance] people] unset:profile];
+        [[SensorsAnalyticsSDK sharedInstance] unset:profile];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
 }
+
 /**
  * 导出 increment 方法给 weex 使用.
  *
@@ -229,9 +250,9 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  * weex 中使用示例：
  *            weexSensorsAnalyticsModule.increment("money",10)
  */
--(void)increment:(NSString *)profile by:(NSNumber *)amount{
+- (void)increment:(NSString *)profile by:(NSNumber *)amount {
     @try {
-        [[[SensorsAnalyticsSDK sharedInstance] people] increment:profile by:amount];
+        [[SensorsAnalyticsSDK sharedInstance] increment:profile by:amount];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
@@ -249,10 +270,10 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  *                   weexSensorsAnalyticsModule.append("Move",list)
 
  */
--(void)append:(NSString *)profile by:(NSArray *)content{
+- (void)append:(NSString *)profile by:(NSArray *)content {
     @try {
         NSSet *setCntent = [NSSet setWithArray:content];
-        [[[SensorsAnalyticsSDK sharedInstance] people] append:profile by:setCntent];
+        [[SensorsAnalyticsSDK sharedInstance] append:profile by:setCntent];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
@@ -265,9 +286,9 @@ WX_EXPORT_METHOD(@selector(deleteUser))
  * weex 中使用示例：
  *                weexSensorsAnalyticsModule.deleteUser()
  */
--(void)deleteUser{
+- (void)deleteUser {
     @try {
-        [[[SensorsAnalyticsSDK sharedInstance] people] deleteUser];
+        [[SensorsAnalyticsSDK sharedInstance] deleteUser];
     } @catch (NSException *exception) {
         NSLog(@"[weexSensorsAnalytics] error:%@",exception);
     }
