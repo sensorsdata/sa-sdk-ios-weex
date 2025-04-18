@@ -39,13 +39,7 @@ SensorsAnalytics SDK 是国内第一家开源商用版用户行为采集 SDK，�
 
 ## License
 
-Copyright 2015－2021 Sensors Data Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
+[License 协议](https://github.com/sensorsdata/sa-sdk-ios-weex/blob/master/LICENSE)
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
